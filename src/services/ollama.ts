@@ -19,8 +19,17 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
     }),
   });
 
-  if (!res.ok) throw new Error(`Ollama embedding failed: ${res.statusText}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Ollama embedding failed: ${res.status} ${errText}`);
+  }
+
   const data = (await res.json()) as { embedding: number[] };
+
+  if (!data.embedding || !Array.isArray(data.embedding)) {
+    throw new Error(`Ollama embedding returned unexpected format: ${JSON.stringify(data)}`);
+  }
+
   return data.embedding;
 };
 
@@ -36,7 +45,11 @@ export const generate = async (prompt: string, system?: string): Promise<string>
     }),
   });
 
-  if (!res.ok) throw new Error(`Ollama generate failed: ${res.statusText}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Ollama generate failed: ${res.status} ${errText}`);
+  }
+
   const data = (await res.json()) as { response: string };
   return data.response;
 };

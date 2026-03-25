@@ -2,11 +2,13 @@ import { Hono } from "hono";
 import { db } from "../db/client.js";
 import { contracts } from "../db/schema.js";
 import { processDocument } from "../services/document.js";
+import { storeChunks } from "../services/embedding.js"
 import { ensureContractDir, getContractFilePath } from "../lib/storage.js";
 import { createRequire } from "module";
 import fs from "fs/promises";
 import { serve } from "@hono/node-server";
 import type { IncomingMessage, ServerResponse } from "http";
+import { eq } from "drizzle-orm";
 
 const require = createRequire(import.meta.url);
 const multer = require("multer");
@@ -77,10 +79,19 @@ router.post("/", async (c) => {
         await db
           .update(contracts)
           .set({ filePath })
-          .where({ id: contract.id } as any);
+          .where(eq(contracts.id, contract.id));
 
         // Extract + chunk
         const { rawText, chunks } = await processDocument(filePath, fileType);
+
+        // Embed + store in ChromaDB
+        await storeChunks(contract.id, chunks);
+
+        // Mark contract as ready
+        await db
+          .update(contracts)
+          .set({ status: "ready", processedAt: new Date() })
+          .where(eq(contracts.id, contract.id));
 
         resolve(c.json({
           contractId: contract.id,
@@ -89,14 +100,14 @@ router.post("/", async (c) => {
           charCount: rawText.length,
           chunkCount: chunks.length,
           preview: rawText.slice(0, 300),
-          status: "processing",
+          status: "ready",
         }, 201));
 
       } catch (err: any) {
         await db
           .update(contracts)
           .set({ status: "failed" })
-          .where({ id: contract.id } as any);
+          .where(eq(contracts.id, contract.id));
 
         console.error("[UPLOAD ERROR]", err);
         resolve(c.json({ error: "Failed to process document", detail: err.message }, 500));
