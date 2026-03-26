@@ -2,8 +2,6 @@ import { getCollection } from "./chroma.js";
 import { generateEmbedding } from "./ollama.js";
 import type { Chunk } from "../lib/chunker.js";
 
-// ── Store Chunks ─────────────────────────────────────────────
-
 export const storeChunks = async (
   contractId: string,
   chunks: Chunk[]
@@ -44,8 +42,6 @@ export const storeChunks = async (
   console.log(`[EMBED] Stored ${chunks.length} chunks in ChromaDB`);
 };
 
-// ── Query Similar Chunks ─────────────────────────────────────
-
 export interface SimilarChunk {
   text: string;
   chunkIndex: number;
@@ -78,8 +74,6 @@ export const querySimilarChunks = async (
     distance: results.distances?.[0]?.[i] ?? 1,
   }));
 };
-
-// ── Delete Contract Chunks ───────────────────────────────────
 
 export const deleteContractChunks = async (
   contractId: string

@@ -9,6 +9,9 @@ import fs from "fs/promises";
 import { serve } from "@hono/node-server";
 import type { IncomingMessage, ServerResponse } from "http";
 import { eq } from "drizzle-orm";
+import { analyzeContract } from "../services/analysis.js";
+import { unloadModel } from "../services/ollama.js";
+import { config } from "../config/index.js";
 
 const require = createRequire(import.meta.url);
 const multer = require("multer");
@@ -84,10 +87,10 @@ router.post("/", async (c) => {
         // Extract + chunk
         const { rawText, chunks } = await processDocument(filePath, fileType);
 
-        // Embed + store in ChromaDB
         await storeChunks(contract.id, chunks);
+        await unloadModel(config.ollamaEmbedModel);
+        await analyzeContract(contract.id, rawText);
 
-        // Mark contract as ready
         await db
           .update(contracts)
           .set({ status: "ready", processedAt: new Date() })
