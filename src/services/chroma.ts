@@ -11,10 +11,11 @@ export const chromaClient = new ChromaClient({
 export const COLLECTION_NAME = "contract_chunks";
 
 export const getCollection = async () => {
-  return await chromaClient.getOrCreateCollection({
+  const collection = await chromaClient.getOrCreateCollection({
     name: COLLECTION_NAME,
     metadata: { "hnsw:space": "cosine" },
   });
+  return collection;
 };
 
 export const checkChromaConnection = async (): Promise<boolean> => {

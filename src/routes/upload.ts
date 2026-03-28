@@ -72,6 +72,8 @@ router.post("/", async (c) => {
         return;
       }
 
+      await assertOllamaReachable();
+
       try {
         // Save file to disk
         const dir = await ensureContractDir(contract.id);
@@ -118,5 +120,12 @@ router.post("/", async (c) => {
     });
   });
 });
+
+export const assertOllamaReachable = async (): Promise<void> => {
+  const reachable = await checkOllamaConnection();
+  if (!reachable) {
+    throw new Error("Ollama is not reachable. Make sure it is running on port 11434.");
+  }
+};
 
 export default router;

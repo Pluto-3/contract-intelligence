@@ -30,29 +30,27 @@ Answer the question using only the contract context above.`;
 };
 
 const assessConfidence = (answer: string, chunks: string[]): "high" | "medium" | "low" => {
-  const notFoundPhrases = [
-    "not mentioned",
-    "not specified",
-    "not addressed",
-    "does not appear",
-    "no information",
-    "cannot find",
-    "not found",
-    "unclear",
-    "not stated",
-  ];
-
   const answerLower = answer.toLowerCase();
 
-  if (notFoundPhrases.some((phrase) => answerLower.includes(phrase))) {
-    return "low";
-  }
+  const notFoundPhrases = [
+    "not mentioned", "not specified", "not addressed",
+    "does not appear", "no information", "cannot find",
+    "not found", "unclear", "not stated", "not explicitly",
+    "no mention", "not covered", "not included",
+  ];
 
-  if (chunks.length >= 3 && answer.length > 100) {
-    return "high";
-  }
+  const hedgePhrases = [
+    "it appears", "it seems", "may be", "might be",
+    "could be", "possibly", "probably", "suggests",
+    "implies", "inferred", "not shown", "not provided",
+    "outside the context", "based on general",
+  ];
 
-  return "medium";
+  if (notFoundPhrases.some((p) => answerLower.includes(p))) return "low";
+  if (hedgePhrases.some((p) => answerLower.includes(p))) return "medium";
+  if (chunks.length === 0) return "low";
+
+  return "high";
 };
 
 const applyUncertaintyWrapper = (
@@ -96,21 +94,15 @@ export const askQuestion = async (
   chunksUsed: number[];
   sessionId: string;
 }> => {
-  console.log(`[QA] Question received for contract ${contractId}: "${question}"`);
+  console.log(`[QA] Question for contract ${contractId}: "${question}"`);
 
   const sessionId = await getOrCreateSession(contractId);
-
-  await db.insert(qaMessages).values({
-    sessionId,
-    role: "user",
-    content: question,
-  });
-
   const chunks = await querySimilarChunks(contractId, question, 5);
 
   if (chunks.length === 0) {
     const fallbackAnswer = "No relevant sections were found in this contract to answer your question.";
 
+    await db.insert(qaMessages).values({ sessionId, role: "user", content: question });
     await db.insert(qaMessages).values({
       sessionId,
       role: "assistant",
@@ -124,7 +116,6 @@ export const askQuestion = async (
 
   const chunkTexts = chunks.map((c) => c.text);
   const chunkIndexes = chunks.map((c) => c.chunkIndex);
-
   const prompt = buildQAPrompt(question, chunkTexts);
 
   await unloadModel(config.ollamaEmbedModel);
@@ -133,6 +124,7 @@ export const askQuestion = async (
   const confidence = assessConfidence(rawAnswer, chunkTexts);
   const answer = applyUncertaintyWrapper(rawAnswer, confidence);
 
+  await db.insert(qaMessages).values({ sessionId, role: "user", content: question });
   await db.insert(qaMessages).values({
     sessionId,
     role: "assistant",
@@ -141,8 +133,7 @@ export const askQuestion = async (
     chunksUsed: chunkIndexes,
   });
 
-  console.log(`[QA] Answer generated. Confidence: ${confidence}`);
-
+  console.log(`[QA] Answered. Confidence: ${confidence}`);
   return { answer, confidence, chunksUsed: chunkIndexes, sessionId };
 };
 

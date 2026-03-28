@@ -3,13 +3,26 @@ import { askQuestion, getSession } from "../services/qa.js";
 import { db } from "../db/client.js";
 import { contracts } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { assertOllamaReachable } from "../services/ollama.js";
+import { rateLimiter } from "hono-rate-limiter";
+
+const limiter = rateLimiter({
+    windowsMs: 60 * 1000,
+    limit: 10,
+    keyGenerator: (c) => c.req.header("x-forwarded-for") ?? "local",
+});
+
+const sanitize = (str: string): string =>
+    str.replace(/<[^>]*>/g, "").replace(/[<>]/g, "").trim();
 
 const router = new Hono();
 
-router.post("/:id/ask", async (c) => {
+router.post("/:id/ask", limiter, async (c) => {
+  await assertOllamaReachable();
+
   const contractId = c.req.param("id");
   const body = await c.req.json();
-  const question = body.question?.trim();
+  const question = sanitize(body.question ?? "");
 
   if (!question) {
     return c.json({ error: "question field is required" }, 400);

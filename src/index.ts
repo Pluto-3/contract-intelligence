@@ -1,3 +1,9 @@
+const originalWarn = console.warn.bind(console);
+console.warn = (...args: any[]) => {
+  if (typeof args[0] === "string" && args[0].includes("DefaultEmbeddingFunction")) return;
+  originalWarn(...args);
+};
+
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { logger } from "./middleware/logger.js";

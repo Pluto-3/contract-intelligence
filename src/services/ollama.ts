@@ -95,3 +95,10 @@ export const unloadModel = async (model: string): Promise<void> => {
   });
   console.log(`[OLLAMA] Unloaded model: ${model}`);
 };
+
+export const assertOllamaReachable = async (): Promise<void> => {
+  const reachable = await checkOllamaConnection();
+  if (!reachable) {
+    throw new Error("Ollama is not reachable. Make sure it is running on port 11434.");
+  }
+};
