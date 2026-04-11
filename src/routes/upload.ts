@@ -13,6 +13,7 @@ import { analyzeContract } from "../services/analysis.js";
 import { unloadModel } from "../services/ollama.js";
 import { config } from "../config/index.js";
 import { checkOllamaConnection } from "../services/ollama.js";
+import { runRiskAssessment } from "../services/riskAssessmentPipeline.js";
 
 const require = createRequire(import.meta.url);
 const multer = require("multer");
@@ -93,6 +94,7 @@ router.post("/", async (c) => {
         await storeChunks(contract.id, chunks);
         await unloadModel(config.ollamaEmbedModel);
         await analyzeContract(contract.id, rawText);
+        await runRiskAssessment(contract.id);
 
         await db
           .update(contracts)
