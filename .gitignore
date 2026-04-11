@@ -3,4 +3,5 @@ dist/
 .env
 storage/contracts/*
 !storage/contracts/.gitkeep
-drizzle/
+drizzle/node_modules/
+.env
