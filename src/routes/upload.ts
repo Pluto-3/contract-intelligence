@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm";
 import { analyzeContract } from "../services/analysis.js";
 import { unloadModel } from "../services/ollama.js";
 import { config } from "../config/index.js";
+import { checkOllamaConnection } from "../services/ollama.js";
 
 const require = createRequire(import.meta.url);
 const multer = require("multer");
@@ -28,9 +29,9 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const router = new Hono();
 
 router.post("/", async (c) => {
-  return new Promise((resolve) => {
-    const req = c.env.incoming as IncomingMessage;
-    const res = c.env.outgoing as ServerResponse;
+  return new Promise<Response>((resolve) => {
+    const req = (c.env as any).incoming as IncomingMessage;
+    const res = (c.env as any).outgoing as ServerResponse;
 
     upload.single("file")(req, res, async (err: any) => {
       if (err) {

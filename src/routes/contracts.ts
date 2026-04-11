@@ -1,8 +1,6 @@
 import { Hono } from "hono";
 import { db } from "../db/client.js";
 import { contracts, clauses } from "../db/schema.js";
-import { eq } from "drizzle-orm";
-import { eq } from "drizzle-orm";
 import { eq, sql } from "drizzle-orm"
 
 const router = new Hono();

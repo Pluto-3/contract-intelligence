@@ -7,7 +7,7 @@ import { assertOllamaReachable } from "../services/ollama.js";
 import { rateLimiter } from "hono-rate-limiter";
 
 const limiter = rateLimiter({
-    windowsMs: 60 * 1000,
+    windowMs: 60 * 1000,
     limit: 10,
     keyGenerator: (c) => c.req.header("x-forwarded-for") ?? "local",
 });

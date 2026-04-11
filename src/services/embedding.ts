@@ -11,7 +11,7 @@ export const storeChunks = async (
   const ids: string[] = [];
   const embeddings: number[][] = [];
   const documents: string[] = [];
-  const metadatas: object[] = [];
+  const metadatas: Record<string, string | number | boolean>[] = [];
 
   console.log(`[EMBED] Embedding ${chunks.length} chunks for contract ${contractId}`);
 

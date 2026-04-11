@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   timestamp,
+  pgEnum,
   smallint,
   jsonb,
 } from "drizzle-orm/pg-core";
@@ -57,5 +58,67 @@ export const feedback = pgTable("feedback", {
     .references(() => qaMessages.id),
   rating: smallint("rating").notNull(),
   comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const riskTierEnum = pgEnum("risk_tier", [
+  "low",
+  "medium",
+  "high",
+  "critical",
+]);
+
+export const riskCategoryEnum = pgEnum("risk_category", [
+  "liability",
+  "termination",
+  "payment",
+  "jurisdiction",
+  "confidentiality",
+]);
+
+export const confidenceLevelEnum = pgEnum("confidence_level", [
+  "low",
+  "medium",
+  "high",
+]);
+
+export const clauseRisks = pgTable("clause_risks", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  contractId: uuid("contract_id").notNull(),
+  clauseId: text("clause_id").notNull(),
+  tier: riskTierEnum("tier").notNull(),
+  category: riskCategoryEnum("category").notNull(),
+  reason: text("reason").notNull(),
+  confidence: confidenceLevelEnum("confidence").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const clauseActions = pgTable("clause_actions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  contractId: uuid("contract_id").notNull(),
+  clauseId: text("clause_id").notNull(),
+  issue: text("issue").notNull(),
+  recommendation: text("recommendation").notNull(),
+  rewrite: text("rewrite"),
+  confidence: confidenceLevelEnum("confidence").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const clauseLinks = pgTable("clause_links", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  contractId: uuid("contract_id").notNull(),
+  clauseAId: text("clause_a_id").notNull(),
+  clauseBId: text("clause_b_id").notNull(),
+  relationship: text("relationship").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const scenarioResults = pgTable("scenario_results", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  contractId: uuid("contract_id").notNull(),
+  scenario: text("scenario").notNull(),
+  outcome: text("outcome").notNull(),
+  riskLevel: riskTierEnum("risk_level").notNull(),
+  explanation: text("explanation").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
