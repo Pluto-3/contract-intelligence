@@ -37,7 +37,6 @@ export const generate = async (prompt: string, system?: string): Promise<string>
   const res = await fetch(`${config.ollamaUrl}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(30 * 60 * 1000),
     body: JSON.stringify({
       model: config.ollamaModel,
       prompt,
@@ -62,7 +61,6 @@ export const chat = async (
   const res = await fetch(`${config.ollamaUrl}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(30 * 60 * 1000),
     body: JSON.stringify({
       model: config.ollamaModel,
       stream: false,
