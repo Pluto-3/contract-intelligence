@@ -14,6 +14,17 @@ import contracts from "./routes/contracts.js";
 import qa from "./routes/qa.js";
 import feedback from "./routes/feedback.js";
 import riskRouter from "./routes/risk.js";
+import actionsRouter from "./routes/actions.js";
+import { Agent, setGlobalDispatcher } from "undici";
+
+const globalAgent = new Agent({
+  headersTimeout: 20 * 60 * 1000,
+  bodyTimeout: 20 * 60 * 1000,
+  connectTimeout: 60000,
+});
+
+setGlobalDispatcher(globalAgent);
+console.log("[INIT] Global Undici Dispatcher set with 20m timeout");
 
 const app = new Hono();
 
@@ -25,6 +36,7 @@ app.route("/api/contracts", contracts)
 app.route("/api/contracts", qa);
 app.route("/api/feedback", feedback);
 app.route("api/contracts", riskRouter);
+app.route("api/contracts", actionsRouter)
 
 app.notFound((c) => c.json({ error: "Route not found" }, 404));
 

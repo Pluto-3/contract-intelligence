@@ -2,6 +2,7 @@ import { db } from "../db/client.js";
 import { clauses } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { assessAllClauses } from "./risk.js";
+import {generateAllActions} from "./actions.js";
 
 export async function runRiskAssessment(contractId: string): Promise<void> {
     console.log(`[RISK PIPELINE] Starting risk assessment for contract ${contractId}`);
@@ -21,6 +22,8 @@ export async function runRiskAssessment(contractId: string): Promise<void> {
         text: r.rawText,
     }));
 
-    await assessAllClauses(contractId, extracted);
-    console.log(`[RISK PIPELINE] Completed risk assessment for contract ${contractId}`);
+    const risks = await assessAllClauses(contractId, extracted);
+    await generateAllActions(contractId, extracted, risks);
+
+    console.log(`[RISK PIPELINE] Completed for contract ${contractId}`)
 }

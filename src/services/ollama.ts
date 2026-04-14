@@ -61,6 +61,7 @@ export const chat = async (
   const res = await fetch(`${config.ollamaUrl}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(20 * 60 * 1000),
     body: JSON.stringify({
       model: config.ollamaModel,
       stream: false,
